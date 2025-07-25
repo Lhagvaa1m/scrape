@@ -379,7 +379,10 @@ def convert_zara_json_to_csv(json_file_path, csv_file_path):
     except IOError as e:
         print(f"\nАлдаа: CSV файл {csv_file_path} руу бичих үед алдаа гарлаа: {e}")
 
-# Функцийг файлын нэрсээр дуудна
-json_file = 'zara_product_detail.json'
-csv_file = 'zara_product_details.csv'
-convert_zara_json_to_csv(json_file, csv_file)
+def main(json_file='zara_product_detail.json', csv_file='zara_product_details.csv'):
+    """Convert a product detail JSON file to CSV using default file names."""
+    convert_zara_json_to_csv(json_file, csv_file)
+
+
+if __name__ == '__main__':
+    main()

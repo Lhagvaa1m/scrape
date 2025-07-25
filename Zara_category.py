@@ -60,44 +60,49 @@ def extract_category_data(category, level=0, parent_path="", all_categories_data
     
     return all_categories_data
 
-url = "https://www.zara.cn/cn/en/categories?ajax=true"
+def main():
+    url = "https://www.zara.cn/cn/en/categories?ajax=true"
 
-# Add User-Agent header
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-}
+    # Add User-Agent header
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
 
-try:
-    response = requests.get(url, headers=headers) # headers added to the request
-    response.raise_for_status()
-    data = response.json()
-except requests.exceptions.RequestException as e:
-    print(f"Error while fetching data from URL: {e}")
-    exit()
-except json.JSONDecodeError:
-    print(f"Data fetched from URL is not in JSON format. Please check the URL: {url}")
-    exit()
+    try:
+        response = requests.get(url, headers=headers)  # headers added to the request
+        response.raise_for_status()
+        data = response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error while fetching data from URL: {e}")
+        return
+    except json.JSONDecodeError:
+        print(f"Data fetched from URL is not in JSON format. Please check the URL: {url}")
+        return
 
-categories_data_list = []
-main_categories = data.get('categories', [])
-if main_categories:
-    for main_category in main_categories:
-        extract_category_data(main_category, level=0, parent_path="", all_categories_data=categories_data_list)
-else:
-    print("No category information found in the fetched data.")
-    exit()
+    categories_data_list = []
+    main_categories = data.get('categories', [])
+    if main_categories:
+        for main_category in main_categories:
+            extract_category_data(main_category, level=0, parent_path="", all_categories_data=categories_data_list)
+    else:
+        print("No category information found in the fetched data.")
+        return
 
-df = pd.DataFrame(categories_data_list)
+    df = pd.DataFrame(categories_data_list)
 
-filtered_df = df[
-    (df['Section Name'] == 'WOMAN') & 
-    (df['Level'] == 1) & 
-    (df['Layout'] == 'products-category-view') &
-    (df['Category Name'] != 'VIEW ALL') 
-]
+    filtered_df = df[
+        (df['Section Name'] == 'WOMAN') &
+        (df['Level'] == 1) &
+        (df['Layout'] == 'products-category-view') &
+        (df['Category Name'] != 'VIEW ALL')
+    ]
 
-output_csv_file = 'Zara_category.csv'
-filtered_df.to_csv(output_csv_file, index=False, encoding='utf-8-sig') 
+    output_csv_file = 'Zara_category.csv'
+    filtered_df.to_csv(output_csv_file, index=False, encoding='utf-8-sig')
 
-print(f"Filtered data successfully exported to '{output_csv_file}'.")
-print(f"Total {len(filtered_df)} category information exported.")
+    print(f"Filtered data successfully exported to '{output_csv_file}'.")
+    print(f"Total {len(filtered_df)} category information exported.")
+
+
+if __name__ == '__main__':
+    main()

@@ -322,67 +322,72 @@ def log_failed_category(category_id, category_name, error_message, log_file='fai
         f.write(f"Category ID: {category_id}, Category Name: {category_name}, Error: {error_message}\n")
     print(f"Logged failed category: {category_name} (ID: {category_id}) to {log_file}")
 
-# Main execution
-category_csv_file = 'Zara_category.csv'
-output_products_csv_file = 'Zara_all_category_products.csv'
-failed_categories_log_file = 'failed_categories.txt'
+def main():
+    """Fetch all products for categories listed in a CSV file."""
+    category_csv_file = 'Zara_category.csv'
+    output_products_csv_file = 'Zara_all_category_products.csv'
+    failed_categories_log_file = 'failed_categories.txt'
 
-# Start fresh for failed categories log
-if os.path.exists(failed_categories_log_file):
-    os.remove(failed_categories_log_file)
+    # Start fresh for failed categories log
+    if os.path.exists(failed_categories_log_file):
+        os.remove(failed_categories_log_file)
 
-try:
-    categories_df = pd.read_csv(category_csv_file)
-    print(f"Successfully loaded category data from '{category_csv_file}'.")
-except FileNotFoundError:
-    print(f"Error: Category CSV file '{category_csv_file}' not found. Please ensure it's in the same directory.")
-    exit()
+    try:
+        categories_df = pd.read_csv(category_csv_file)
+        print(f"Successfully loaded category data from '{category_csv_file}'.")
+    except FileNotFoundError:
+        print(f"Error: Category CSV file '{category_csv_file}' not found. Please ensure it's in the same directory.")
+        return
 
-# Define CSV fieldnames (from your Zara_product.py)
-# Шинэ багануудыг нэмсэн: 'Image URL', 'Source Category ID', 'Source Category Name'
-fieldnames = [
-    'Product ID', 'Reference', 'Display Reference', 'Product Name', 'Product URL',
-    'Description', 'Brand Code', 'Type', 'Kind', 'Availability',
-    'Current Price (MNT)', 'Old Price (MNT)', 'Discount Percentage', 'Discount Label',
-    'Is On Sale',
-    'Section Name', 'Family Name', 'Subfamily Name', 'SEO Keyword', 'SEO Product ID',
-    'Color ID', 'Color Name', 'SKU Code',
-    'Size ID', 'Size Name', 'Outer Code', 'Material Composition',
-    'Grid Position', 'Zoomed Grid Position', 'Show Extra Image On Hover',
-    'Has Xmedia Double', 'Price Unavailable',
-    'Image URL', # Шинэ багана
-    'Source Category ID', # Шинэ багана
-    'Source Category Name' # Шинэ багана
-]
+    # Define CSV fieldnames (from your Zara_product.py)
+    # Шинэ багануудыг нэмсэн: 'Image URL', 'Source Category ID', 'Source Category Name'
+    fieldnames = [
+        'Product ID', 'Reference', 'Display Reference', 'Product Name', 'Product URL',
+        'Description', 'Brand Code', 'Type', 'Kind', 'Availability',
+        'Current Price (MNT)', 'Old Price (MNT)', 'Discount Percentage', 'Discount Label',
+        'Is On Sale',
+        'Section Name', 'Family Name', 'Subfamily Name', 'SEO Keyword', 'SEO Product ID',
+        'Color ID', 'Color Name', 'SKU Code',
+        'Size ID', 'Size Name', 'Outer Code', 'Material Composition',
+        'Grid Position', 'Zoomed Grid Position', 'Show Extra Image On Hover',
+        'Has Xmedia Double', 'Price Unavailable',
+        'Image URL', # Шинэ багана
+        'Source Category ID', # Шинэ багана
+        'Source Category Name' # Шинэ багана
+    ]
 
-products_count = 0
-with open(output_products_csv_file, 'w', newline='', encoding='utf-8-sig') as outfile:
-    writer = csv.DictWriter(outfile, fieldnames=fieldnames)
-    writer.writeheader()
+    products_count = 0
+    with open(output_products_csv_file, 'w', newline='', encoding='utf-8-sig') as outfile:
+        writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+        writer.writeheader()
 
-    for index, row in categories_df.iterrows():
-        category_id = row['Category ID']
-        seo_keyword = row['SEO Keyword'] 
-        category_name = row['Category Name']
+        for index, row in categories_df.iterrows():
+            category_id = row['Category ID']
+            seo_keyword = row['SEO Keyword']
+            category_name = row['Category Name']
 
-        print(f"\nProcessing category: {category_name} (ID: {category_id})")
+            print(f"\nProcessing category: {category_name} (ID: {category_id})")
 
-        product_json_data = fetch_products_for_category(category_id)
-        if product_json_data:
-            # process_and_save_products функцийг дуудахдаа категорийн мэдээллийг дамжуулах
-            products_count = process_and_save_products(
-                product_json_data, writer, products_count, category_id, category_name
-            )
-            print(f"Total products processed so far: {products_count}")
-        else:
-            error_msg = f"Failed to fetch or process products for category ID: {category_id}"
-            log_failed_category(category_id, category_name, error_msg, failed_categories_log_file)
-            print(f"Skipping category {category_name} due to data fetching issues.")
-        
-        sleep_time = random.uniform(2, 7)
-        print(f"Waiting for {sleep_time:.2f} seconds before next category...")
-        time.sleep(sleep_time)
+            product_json_data = fetch_products_for_category(category_id)
+            if product_json_data:
+                # process_and_save_products функцийг дуудахдаа категорийн мэдээллийг дамжуулах
+                products_count = process_and_save_products(
+                    product_json_data, writer, products_count, category_id, category_name
+                )
+                print(f"Total products processed so far: {products_count}")
+            else:
+                error_msg = f"Failed to fetch or process products for category ID: {category_id}"
+                log_failed_category(category_id, category_name, error_msg, failed_categories_log_file)
+                print(f"Skipping category {category_name} due to data fetching issues.")
 
-print(f"\nAll product data from all categories saved to '{output_products_csv_file}'.")
-print(f"Total products processed: {products_count}")
-print(f"Check '{failed_categories_log_file}' for any categories that failed to process.")
+            sleep_time = random.uniform(2, 7)
+            print(f"Waiting for {sleep_time:.2f} seconds before next category...")
+            time.sleep(sleep_time)
+
+    print(f"\nAll product data from all categories saved to '{output_products_csv_file}'.")
+    print(f"Total products processed: {products_count}")
+    print(f"Check '{failed_categories_log_file}' for any categories that failed to process.")
+
+
+if __name__ == '__main__':
+    main()
